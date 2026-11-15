@@ -17,7 +17,9 @@ import pandas as pd
 
 from tcc import config as C
 
-PER_CLIP = "kaggle/tcc-deteccao-snr/out/phase1/s2_trigger_per_clip_snr{snr:g}.csv"
+PER_CLIP = "kaggle/{d}/out/phase1/s2_trigger_per_clip_snr{snr:g}.csv"
+DIRS = ("tcc-deteccao-snr", "tcc-d12-deteccao-extra")  # D12 adds 25 and 15 dB
+SNRS = (40.0, 30.0, 25.0, 20.0, 15.0, 10.0, 0.0)
 FPRS = (0.01, 0.05, 0.10)
 
 
@@ -42,8 +44,9 @@ def audit(df: pd.DataFrame) -> dict:
 
 def main():
     report = {"score": "1 kHz prominence over 500-2000 Hz band median (dB), single clip, no reference"}
-    for snr in C.SNR_VALUES:
-        df = pd.read_csv(C.RESULTS_DIR / PER_CLIP.format(snr=snr))
+    for snr in SNRS:
+        f = next(C.RESULTS_DIR / PER_CLIP.format(d=d, snr=snr) for d in DIRS if (C.RESULTS_DIR / PER_CLIP.format(d=d, snr=snr)).exists())
+        df = pd.read_csv(f)
         test_gs = df[(df.split == "test") & (df["class"] == C.SOURCE_CLASS)]
         report[f"{snr:g}"] = {"all_clips": audit(df), "test_gun_shot": audit(test_gs),
                               "by_class_tpr_at_fpr5": {c: audit(g)["fpr0.05"]["tpr"] for c, g in df.groupby("class")}}

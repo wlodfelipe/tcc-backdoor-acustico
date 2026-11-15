@@ -17,7 +17,7 @@ SRC, TGT = 6, 9  # classID gun_shot, street_music
 fsid = {r["slice_file_name"]: r["fsID"] for r in csv.DictReader(open(META))}
 
 runs = defaultdict(list)
-for f in sorted(glob.glob("results/kaggle/tcc-principal-*/out/runs/*_snr10_seed*_test_logits.npz")):
+for f in sorted(glob.glob("results/kaggle/tcc-d12-*/out/runs/*_snr10_seed*_test_logits.npz")):
     name = Path(f).name
     rate = "ref" if name.startswith("ref") else re.match(r"rate([\d.]+)pct", name).group(1)
     d = np.load(f, allow_pickle=True)

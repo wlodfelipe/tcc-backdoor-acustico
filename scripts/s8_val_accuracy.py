@@ -10,10 +10,10 @@ import numpy as np
 from scipy import stats
 
 acc = defaultdict(list)
-for f in sorted(glob.glob("results/kaggle/tcc-principal-*/out/runs/*_snr10_seed*.json")):
+for f in sorted(glob.glob("results/kaggle/tcc-d12-*/out/runs/*_snr10_seed*.json")):
     d = json.load(open(f))
     k = "ref" if d["run"].startswith("ref") else re.match(r"rate([\d.]+)pct", d["run"]).group(1)
-    acc[k].append(d["best_val_acc"])
+    acc[k].append(d["history"][-1]["val_acc"])  # última época (protocolo D12)
 ref = np.array(acc["ref"]); out = {"ref": {"mean": ref.mean(), "sd": ref.std(ddof=1), "n": len(ref)}, "rates": {}}
 for k in ["0.5", "1", "2", "5"]:
     a = np.array(acc[k]); t = stats.ttest_ind(ref, a, equal_var=False)

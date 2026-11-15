@@ -20,7 +20,7 @@ from scipy import stats
 
 from tcc import config as C
 
-RUN_GLOB = "kaggle/tcc-principal-*/out/runs/*_snr10_seed*.json"
+RUN_GLOB = "kaggle/tcc-d12-*/out/runs/*_snr10_seed*.json"  # D12: sweep (5%, seeds 0-2) + stage 2
 H1_ASR, H1_CLEAN_ASR, H1_DACC_PP = 0.85, 0.10, 2.0
 ALPHA = 0.05
 
@@ -62,7 +62,7 @@ def load_runs() -> pd.DataFrame:
 def main():
     df = load_runs()
     assert len(df) == 25, f"expected 25 runs, found {len(df)}"
-    assert df.groupby("rate").size().eq(5).all() and df.commit.nunique() == 1
+    assert df.groupby("rate").size().eq(5).all()  # D12: sweep and stage 2 commits differ only in kaggle_push.py
     ref = df[df.rate == 0]
     acc_ref = ref.acc_clean.to_numpy()
 
@@ -95,19 +95,19 @@ def main():
             "gun_shot_poisoned_frac_max": float(g.gun_shot_poisoned_frac.max()),
             "best_epoch_by_seed": g.best_epoch.tolist(),
             "h1_criteria": crit, "h1_all_criteria": all(crit.values()),
-            "asr_by_inference_trigger_snr_mean": {s: float(g[f"asr_trig{s}"].mean()) for s in ("40", "30", "20", "10", "0")},
-            "asr_by_inference_trigger_snr_sd": {s: float(g[f"asr_trig{s}"].std(ddof=1)) for s in ("40", "30", "20", "10", "0")},
+            "asr_by_inference_trigger_snr_mean": {s: float(g[f"asr_trig{s}"].mean()) for s in ("40", "30", "25", "20", "15", "10", "0")},
+            "asr_by_inference_trigger_snr_sd": {s: float(g[f"asr_trig{s}"].std(ddof=1)) for s in ("40", "30", "25", "20", "15", "10", "0")},
         })
 
     h1_rates = [r["rate"] for r in per_rate if r["rate"] < 0.05 and r["h1_all_criteria"]]
     report = {
-        "selected_snr_db": 10.0, "n_runs": len(df), "commit": df.commit.iloc[0], "gpu": sorted(df.gpu.unique()),
+        "selected_snr_db": 10.0, "n_runs": len(df), "commit": sorted(df.commit.unique()), "gpu": sorted(df.gpu.unique()),
         "reference": {
             "acc_clean_mean": float(acc_ref.mean()), "acc_clean_sd": float(acc_ref.std(ddof=1)),
             "acc_clean_by_seed": acc_ref.tolist(),
             "triggered_asr_mean_10db": float(ref.triggered_asr.mean()),  # control (Section 3.6)
             "asr_all_nontarget_mean_10db": float(ref.asr_all_nontarget.mean()),
-            "asr_by_inference_trigger_snr_mean": {s: float(ref[f"asr_trig{s}"].mean()) for s in ("40", "30", "20", "10", "0")},
+            "asr_by_inference_trigger_snr_mean": {s: float(ref[f"asr_trig{s}"].mean()) for s in ("40", "30", "25", "20", "15", "10", "0")},
             "best_epoch_by_seed": ref.best_epoch.tolist(),
         },
         "per_rate": per_rate,
